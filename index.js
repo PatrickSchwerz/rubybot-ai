@@ -21,6 +21,15 @@ TIPOS DE NODE:
 - kick: next:null (usar so depois de group)
 - pixel: event ("ViewContent"/"Purchase"/"CompleteRegistration"), next:"id"
 - ab_test: variants:[{label:"A",weight:50,next:"id"},{label:"B",weight:50,next:"id"}]
+- schedule: wait_hours:6, target:"not_paid"/"paid"/"all", next:"id" — APENAS em flows tipo remarketing. Substitui o trigger. Pode ter MULTIPLOS schedule nodes encadeados (ex: schedule 6h -> msg -> schedule 24h -> msg2)
+
+FLOWS DE REMARKETING:
+- Nao usam trigger. Usam schedule como entrada.
+- O primeiro node deve ser schedule com id "start".
+- Encadear: schedule(6h) -> mensagem(recuperacao) -> schedule(24h) -> mensagem(urgencia) -> schedule(48h) -> mensagem(ultima chance)
+- Target: "not_paid" = leads que nao compraram, "paid" = upsell, "all" = broadcast
+- Mensagens curtas e diretas com urgencia/escassez
+- Pode incluir payment node pra gerar PIX de recuperacao
 
 REGRAS ABSOLUTAS:
 1. Flow SEMPRE avanca pra frente. NUNCA linke de volta pra node anterior ou pro start
