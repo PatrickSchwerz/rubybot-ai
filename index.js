@@ -50,6 +50,25 @@ EXEMPLO 2 — Funil com upsell/downsell:
 
 Gere o flow seguindo exatamente esses padroes. APENAS o JSON, nada mais.`;
 
+const SYSTEM_COPY_IMPROVE = `Voce e um copywriter expert em vendas no Telegram.
+O usuario vai te enviar um texto de mensagem de bot de vendas. Voce deve gerar EXATAMENTE 3 variacoes melhoradas.
+
+VARIACOES:
+1. "agressiva" — com gatilhos de urgencia, escassez e pressao. Curta e direta.
+2. "suave" — empática, storytelling leve, conexao emocional. Tom amigavel.
+3. "criativa" — hook forte, curiosidade, angulo inesperado. Surpreendente.
+
+REGRAS:
+- Mantenha o mesmo sentido/objetivo do texto original
+- Mantenha as variaveis entre chaves como {nome}, {username}, {valor}, {plano} etc — NAO altere nem remova
+- Texto para Telegram: use *negrito*, _italico_ se quiser (MarkdownV2)
+- Maximo 20% maior que o original. Se o original e curto, mantenha curto.
+- Portugues brasileiro informal, como se fosse um vendedor real no Telegram
+- NAO inclua explicacoes, so as 3 variacoes
+
+FORMATO DE RESPOSTA — APENAS este JSON, nada mais:
+{"variations":[{"style":"agressiva","text":"..."},{"style":"suave","text":"..."},{"style":"criativa","text":"..."}]}`;
+
 const SYSTEM_IMPROVE = `Voce e o melhor estrategista de marketing digital e funis de vendas do mundo.
 Voce domina TODOS os gatilhos mentais e sabe exatamente onde aplicar cada um:
 
@@ -631,6 +650,40 @@ const server = http.createServer(async (req, res) => {
         console.error('[generate-flow] error:', e.message);
         console.error('[generate-flow] raw (500 chars):', (raw || '').slice(0, 500));
         jsonReply(res, 500, { error: 'Falha ao gerar flow', detail: e.message });
+      }
+      return;
+    }
+
+    if (req.url === '/ai/improve-copy') {
+      try {
+        const text = body.text || '';
+        if (!text.trim()) {
+          jsonReply(res, 400, { error: 'Texto vazio' });
+          return;
+        }
+        const context = body.context || '';
+        const userPrompt = context
+          ? `Contexto do produto/nicho: ${context}\n\nTexto original:\n${text}`
+          : `Texto original:\n${text}`;
+
+        const raw = await ask([
+          { role: 'system', content: SYSTEM_COPY_IMPROVE },
+          { role: 'user', content: userPrompt },
+        ], { temperature: 0.7, maxTokens: 2048 });
+
+        // Extrair JSON da resposta
+        let jsonStr = raw.trim();
+        const jsonMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) jsonStr = jsonMatch[1].trim();
+        const firstBrace = jsonStr.indexOf('{');
+        const lastBrace = jsonStr.lastIndexOf('}');
+        if (firstBrace !== -1 && lastBrace !== -1) jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+
+        const parsed = JSON.parse(jsonStr);
+        jsonReply(res, 200, parsed);
+      } catch (e) {
+        console.error('[improve-copy] error:', e.message);
+        jsonReply(res, 500, { error: 'Falha ao gerar variacoes' });
       }
       return;
     }

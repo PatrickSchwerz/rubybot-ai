@@ -1,0 +1,21 @@
+{
+  "name": "ruby-promo-video",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "render": "remotion render src/index.ts RubyPromo out/ruby-promo.mp4",
+    "render-gif": "remotion render src/index.ts RubyPromo out/ruby-promo.gif --image-format png"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.441",
+    "@remotion/google-fonts": "4.0.441",
+    "react": "^19",
+    "react-dom": "^19",
+    "remotion": "4.0.441"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}
